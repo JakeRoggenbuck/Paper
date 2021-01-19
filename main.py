@@ -1,5 +1,10 @@
 from enum import Enum
 import shlex
+import re
+
+
+NUMBER_INT = re.compile('\d*')
+NUMBER_FLOAT = re.compile('\d*\.\d*')
 
 
 class Var:
@@ -25,7 +30,8 @@ class TokenType(Enum):
     INT = 4
     EQUAL = 5
     STRING_DATA = 6
-    VAR_NAME = 7
+    INT_DATA = 7
+    VAR_NAME = 8
 
 
 class Token:
@@ -86,6 +92,9 @@ class Tokenizer:
         elif item[0] == "\"" and item[-1] == item[0]:
             token = Token(TokenType.STRING_DATA)
 
+        elif NUMBER_INT.match(item).group(0) != "":
+            token = Token(TokenType.INT_DATA)
+
         elif item[0] == ".":
             token = Token(TokenType.VAR_NAME)
 
@@ -110,46 +119,74 @@ class Tokenizer:
 
 
 class Parser:
-    def __init__(self, tokens: list, items: list):
+    def __init__(self, tokens: list, items: list, debug_mode: bool = False):
         self.tokens = tokens
         self.items = items
         self.vars_in_mem = {}
 
-    def get_data_from_string(self, string: str):
+        self.debug_mode = debug_mode
+
+    def remove_quotes(self, string: str):
         return string[1:-1]
+
+    def remove_dot(self, var: str):
+        return var[1:]
+
+    def access_item(self, num: int):
+        return self.items[self.tokens.index + num]
 
     def parse_item(self):
         # Starts with print
         if self.tokens.get().token == TokenType.PRINT:
+
+            # Print a raw string
             if self.tokens.next().get().token == TokenType.STRING_DATA:
-                print(self.get_data_from_string(self.items[self.tokens.index + 1]))
+                print(self.remove_quotes(self.access_item(1)))
+
+            # Print var
+            if self.tokens.next().get().token == TokenType.VAR_NAME:
+                print(self.vars_in_mem[self.remove_dot(self.access_item(1))].data)
 
         # Starts with string
-        if self.tokens.get().token == TokenType.STRING:
+        elif self.tokens.get().token == TokenType.STRING:
             if self.tokens.next().get().token == TokenType.VAR_NAME:
-                name = self.items[self.tokens.index + 1][1:]
+                name = self.remove_dot(self.access_item(1))
                 if self.tokens.next(2).get().token == TokenType.EQUAL:
 
                     # Set a raw string
                     if self.tokens.next(3).get().token == TokenType.STRING_DATA:
-                        self.vars_in_mem[name] = String(self.items[self.tokens.index + 3])
+                        self.vars_in_mem[name] = String(self.access_item(3))
 
                     # Get value from input, set as string
                     elif self.tokens.next(3).get().token == TokenType.INPUT:
                         if self.tokens.next(4).get().token == TokenType.STRING_DATA:
-                            get_input = input(
-                                self.get_data_from_string(self.items[self.tokens.index + 4])
-                            )
+                            get_input = input(self.remove_quotes(self.access_item(4)))
                             self.vars_in_mem[name] = String(get_input)
+
+        # Starts with int
+        elif self.tokens.get().token == TokenType.INT:
+            if self.tokens.next().get().token == TokenType.VAR_NAME:
+                name = self.remove_dot(self.access_item(1))
+                if self.tokens.next(2).get().token == TokenType.EQUAL:
+
+                    # Set a raw int
+                    if self.tokens.next(3).get().token == TokenType.INT_DATA:
+                        self.vars_in_mem[name] = Int(self.access_item(3))
+
+                    # Get value from input, set as int
+                    elif self.tokens.next(3).get().token == TokenType.INPUT:
+                        if self.tokens.next(4).get().token == TokenType.INT_DATA:
+                            get_input = input(self.access_item(4))
+                            self.vars_in_mem[name] = Int(get_input)
 
         self.tokens.index += 1
 
     def parse(self):
         index = 0
         while index < len(self.tokens.tokens):
-            item = self.items[index]
+            if self.debug_mode:
+                print(self.tokens.tokens[index].token)
             self.parse_item()
-            # print(self.tokens.tokens[index].token, item)
             index += 1
 
 
@@ -157,6 +194,7 @@ if __name__ == "__main__":
     tokenizer = Tokenizer()
     tokenizer.tokenize()
 
-    parser = Parser(tokenizer.tokens, tokenizer.items)
+    parser = Parser(tokenizer.tokens, tokenizer.items, debug_mode=False)
     parser.parse()
-    print(parser.vars_in_mem)
+    if parser.debug_mode:
+        print(parser.vars_in_mem)
