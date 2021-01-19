@@ -19,7 +19,7 @@ class String(Var):
 
 class Int(Var):
     def __init__(self, data):
-        super().__init__(data)
+        super().__init__(int(data))
 
 
 class TokenType(Enum):
@@ -159,9 +159,23 @@ class Parser:
 
                     # Get value from input, set as string
                     elif self.tokens.next(3).get().token == TokenType.INPUT:
+
+                        # Is raw string
                         if self.tokens.next(4).get().token == TokenType.STRING_DATA:
                             get_input = input(self.remove_quotes(self.access_item(4)))
                             self.vars_in_mem[name] = String(get_input)
+
+                        # Is var
+                        elif self.tokens.next(4).get().token == TokenType.VAR_NAME:
+                            get_input = input(
+                                self.vars_in_mem[self.remove_dot(self.access_item(4))].data
+                            )
+                            self.vars_in_mem[name] = String(get_input)
+
+                    # Set int as another int (redefinition)
+                    elif self.tokens.next(3).get().token == TokenType.VAR_NAME:
+                        var = self.vars_in_mem[self.remove_dot(self.access_item(3))].data
+                        self.vars_in_mem[name] = String(var)
 
         # Starts with int
         elif self.tokens.get().token == TokenType.INT:
@@ -175,9 +189,16 @@ class Parser:
 
                     # Get value from input, set as int
                     elif self.tokens.next(3).get().token == TokenType.INPUT:
+
+                        # Is raw string
                         if self.tokens.next(4).get().token == TokenType.INT_DATA:
                             get_input = input(self.access_item(4))
                             self.vars_in_mem[name] = Int(get_input)
+
+                    # Set int as another int (redefinition)
+                    elif self.tokens.next(3).get().token == TokenType.VAR_NAME:
+                        var = self.vars_in_mem[self.remove_dot(self.access_item(3))].data
+                        self.vars_in_mem[name] = Int(var)
 
         self.tokens.index += 1
 
@@ -186,6 +207,7 @@ class Parser:
         while index < len(self.tokens.tokens):
             if self.debug_mode:
                 print(self.tokens.tokens[index].token)
+                print(self.vars_in_mem)
             self.parse_item()
             index += 1
 
