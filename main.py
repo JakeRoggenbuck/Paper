@@ -135,70 +135,78 @@ class Parser:
     def access_item(self, num: int):
         return self.items[self.tokens.index + num]
 
+    def parse_print(self):
+        # Print a raw string
+        if self.tokens.next().get().token == TokenType.STRING_DATA:
+            print(self.remove_quotes(self.access_item(1)))
+
+        # Print var
+        if self.tokens.next().get().token == TokenType.VAR_NAME:
+            print(self.vars_in_mem[self.remove_dot(self.access_item(1))].data)
+
+    def parse_string(self):
+        if self.tokens.next().get().token == TokenType.VAR_NAME:
+            name = self.remove_dot(self.access_item(1))
+            if self.tokens.next(2).get().token == TokenType.EQUAL:
+
+                # Set a raw string
+                if self.tokens.next(3).get().token == TokenType.STRING_DATA:
+                    self.vars_in_mem[name] = String(self.access_item(3))
+
+                # Get value from input, set as string
+                elif self.tokens.next(3).get().token == TokenType.INPUT:
+
+                    # Is raw string
+                    if self.tokens.next(4).get().token == TokenType.STRING_DATA:
+                        get_input = input(self.remove_quotes(self.access_item(4)))
+                        self.vars_in_mem[name] = String(get_input)
+
+                    # Is var
+                    elif self.tokens.next(4).get().token == TokenType.VAR_NAME:
+                        get_input = input(
+                            self.vars_in_mem[self.remove_dot(self.access_item(4))].data
+                        )
+                        self.vars_in_mem[name] = String(get_input)
+
+                # Set int as another int (redefinition)
+                elif self.tokens.next(3).get().token == TokenType.VAR_NAME:
+                    var = self.vars_in_mem[self.remove_dot(self.access_item(3))].data
+                    self.vars_in_mem[name] = String(var)
+
+    def parse_int(self):
+        if self.tokens.next().get().token == TokenType.VAR_NAME:
+            name = self.remove_dot(self.access_item(1))
+            if self.tokens.next(2).get().token == TokenType.EQUAL:
+
+                # Set a raw int
+                if self.tokens.next(3).get().token == TokenType.INT_DATA:
+                    self.vars_in_mem[name] = Int(self.access_item(3))
+
+                # Get value from input, set as int
+                elif self.tokens.next(3).get().token == TokenType.INPUT:
+
+                    # Is raw string
+                    if self.tokens.next(4).get().token == TokenType.INT_DATA:
+                        get_input = input(self.access_item(4))
+                        self.vars_in_mem[name] = Int(get_input)
+
+                # Set int as another int (redefinition)
+                elif self.tokens.next(3).get().token == TokenType.VAR_NAME:
+                    var = self.vars_in_mem[self.remove_dot(self.access_item(3))].data
+                    self.vars_in_mem[name] = Int(var)
+
     def parse_item(self):
         # Starts with print
         if self.tokens.get().token == TokenType.PRINT:
-
-            # Print a raw string
-            if self.tokens.next().get().token == TokenType.STRING_DATA:
-                print(self.remove_quotes(self.access_item(1)))
-
-            # Print var
-            if self.tokens.next().get().token == TokenType.VAR_NAME:
-                print(self.vars_in_mem[self.remove_dot(self.access_item(1))].data)
+            self.parse_print()
 
         # Starts with string
         elif self.tokens.get().token == TokenType.STRING:
-            if self.tokens.next().get().token == TokenType.VAR_NAME:
-                name = self.remove_dot(self.access_item(1))
-                if self.tokens.next(2).get().token == TokenType.EQUAL:
-
-                    # Set a raw string
-                    if self.tokens.next(3).get().token == TokenType.STRING_DATA:
-                        self.vars_in_mem[name] = String(self.access_item(3))
-
-                    # Get value from input, set as string
-                    elif self.tokens.next(3).get().token == TokenType.INPUT:
-
-                        # Is raw string
-                        if self.tokens.next(4).get().token == TokenType.STRING_DATA:
-                            get_input = input(self.remove_quotes(self.access_item(4)))
-                            self.vars_in_mem[name] = String(get_input)
-
-                        # Is var
-                        elif self.tokens.next(4).get().token == TokenType.VAR_NAME:
-                            get_input = input(
-                                self.vars_in_mem[self.remove_dot(self.access_item(4))].data
-                            )
-                            self.vars_in_mem[name] = String(get_input)
-
-                    # Set int as another int (redefinition)
-                    elif self.tokens.next(3).get().token == TokenType.VAR_NAME:
-                        var = self.vars_in_mem[self.remove_dot(self.access_item(3))].data
-                        self.vars_in_mem[name] = String(var)
+            self.parse_string()
 
         # Starts with int
         elif self.tokens.get().token == TokenType.INT:
-            if self.tokens.next().get().token == TokenType.VAR_NAME:
-                name = self.remove_dot(self.access_item(1))
-                if self.tokens.next(2).get().token == TokenType.EQUAL:
-
-                    # Set a raw int
-                    if self.tokens.next(3).get().token == TokenType.INT_DATA:
-                        self.vars_in_mem[name] = Int(self.access_item(3))
-
-                    # Get value from input, set as int
-                    elif self.tokens.next(3).get().token == TokenType.INPUT:
-
-                        # Is raw string
-                        if self.tokens.next(4).get().token == TokenType.INT_DATA:
-                            get_input = input(self.access_item(4))
-                            self.vars_in_mem[name] = Int(get_input)
-
-                    # Set int as another int (redefinition)
-                    elif self.tokens.next(3).get().token == TokenType.VAR_NAME:
-                        var = self.vars_in_mem[self.remove_dot(self.access_item(3))].data
-                        self.vars_in_mem[name] = Int(var)
+            self.parse_int()
 
         self.tokens.index += 1
 
