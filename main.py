@@ -1,28 +1,72 @@
 from enum import Enum
 import shlex
 import re
+from pprint import pprint
+from termcolor import colored
+from optparse import OptionParser
 
 
 NUMBER_INT = re.compile('\d*')
 NUMBER_FLOAT = re.compile('\d*\.\d*')
 
 
+class OrderedEnum(Enum):
+    """Refrence https://docs.python.org/3/library/enum.html#orderedenum"""
+
+    def __ge__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value >= other.value
+        return NotImplemented
+
+    def __gt__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value > other.value
+        return NotImplemented
+
+    def __le__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value <= other.value
+        return NotImplemented
+
+    def __lt__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value < other.value
+        return NotImplemented
+
+
 class Var:
-    def __init__(self, data):
+    def __init__(self, data, name):
         self.data = data
+        self.name = name
+
+    def __repr__(self):
+        return f"{self.name}({self.data})"
 
 
 class String(Var):
     def __init__(self, data):
-        super().__init__(data)
+        super().__init__(data, "String")
+
+    def __repr__(self):
+        return f"String(\"{self.data}\")"
 
 
 class Int(Var):
     def __init__(self, data):
-        super().__init__(int(data))
+        super().__init__(int(data), "Int")
 
 
-class TokenType(Enum):
+class Float(Var):
+    def __init__(self, data):
+        super().__init__(float(data), "Float")
+
+
+class Bool(Var):
+    def __init__(self, data):
+        super().__init__(float(data), "Bool")
+
+
+class TokenType(OrderedEnum):
     NONE = 0
     PRINT = 1
     INPUT = 2
@@ -34,9 +78,19 @@ class TokenType(Enum):
     VAR_NAME = 8
 
 
+class RunType(OrderedEnum):
+    NORMAL = 0
+    VERBOSE = 1
+    DEBUG = 2
+    STEP_THROUGH_DEBUG = 3
+
+
 class Token:
-    def __init__(self, token: int):
+    def __init__(self, token: TokenType):
         self.token = TokenType(token)
+
+    def __repr__(self):
+        return f"Token({self.token})"
 
 
 class Tokens:
@@ -60,17 +114,18 @@ class Tokens:
         return Tokens(self.tokens, self.index - amount)
 
     def __repr__(self):
-        return f"tokens[{self.index}] = TokenType({self.get()})"
+        return f"Tokens(tokens=[\"{self.tokens[self.index]}\", ...])"
 
 
 class Tokenizer:
-    def __init__(self):
-        self.items = []
+    def __init__(self, filename: str):
+        self.filename = filename
+        self.items: list = []
         self.tokens = Tokens()
         self.lines = self.get_file_lines()
 
     def get_file_lines(self):
-        with open("file.txt") as file:
+        with open(self.filename) as file:
             return file.readlines()
 
     def get_token_type(self, item: str):
@@ -117,14 +172,18 @@ class Tokenizer:
     def tokenize(self):
         self.tokenize_each_line()
 
+    def __repr__(self):
+        return f"Tokenizer(items=[\"{self.items[0]}\", ...], \
+            lines=[\"{self.lines[0].strip()}\", ...], tokens=Tokens())"
+
 
 class Parser:
-    def __init__(self, tokens: list, items: list, debug_mode: bool = False):
+    def __init__(self, tokens: Tokens, items: list, mode: RunType = RunType.NORMAL):
         self.tokens = tokens
         self.items = items
-        self.vars_in_mem = {}
+        self.vars_in_mem: dict = {}
 
-        self.debug_mode = debug_mode
+        self.mode = mode
 
     def remove_quotes(self, string: str):
         return string[1:-1]
@@ -210,21 +269,54 @@ class Parser:
 
         self.tokens.index += 1
 
+    def show_token(self, index: int):
+        print(colored(self.tokens.tokens[index].token, "green"))
+
+    def show_mem(self):
+        pprint(self.vars_in_mem)
+
     def parse(self):
+        print(self)
         index = 0
         while index < len(self.tokens.tokens):
-            if self.debug_mode:
-                print(self.tokens.tokens[index].token)
-                print(self.vars_in_mem)
+
+            if self.mode >= RunType.VERBOSE:
+                self.show_token(index)
+
+            if self.mode >= RunType.STEP_THROUGH_DEBUG:
+                self.show_mem()
+
             self.parse_item()
             index += 1
 
+        if self.mode >= RunType.DEBUG and self.mode is not RunType.STEP_THROUGH_DEBUG:
+            self.show_mem()
+
+    def __repr__(self):
+        return f"Parser(mode={self.mode}, tokens=Tokens())"
+
+
+def option_parse():
+    parser = OptionParser()
+    parser.add_option(
+        "-m",
+        "--mode",
+        dest="mode",
+        default=False,
+        help="The mode of running",
+    )
+    options, args = parser.parse_args()
+    filename = args[0]
+
+    mode = RunType(int(options.mode)) if options.mode else RunType.NORMAL
+
+    return filename, mode
+
 
 if __name__ == "__main__":
-    tokenizer = Tokenizer()
+    filename, mode = option_parse()
+    tokenizer = Tokenizer(filename)
     tokenizer.tokenize()
 
-    parser = Parser(tokenizer.tokens, tokenizer.items, debug_mode=False)
+    parser = Parser(tokenizer.tokens, tokenizer.items, mode=mode)
     parser.parse()
-    if parser.debug_mode:
-        print(parser.vars_in_mem)
