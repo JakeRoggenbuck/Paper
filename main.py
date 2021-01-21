@@ -6,8 +6,20 @@ from termcolor import colored
 from optparse import OptionParser
 
 
+VERSION = 0.1
+
 NUMBER_INT = re.compile('\d*')
 NUMBER_FLOAT = re.compile('\d*\.\d*')
+
+
+class FutureImplementation:
+    def __init__(self, version_expected: int = 0):
+        self.message = f"FutureImplementation"
+        if version_expected != 0:
+            self.message = f"{self.message} {version_expected}"
+
+    def __repr__(self):
+        return colored(self.message, "red")
 
 
 class OrderedEnum(Enum):
@@ -66,6 +78,43 @@ class Bool(Var):
         super().__init__(float(data), "Bool")
 
 
+class PaperError:
+    def __init__(self, message, string):
+        self.message = message
+        self.string = string
+
+    def __str__(self):
+        return self.string
+
+    def raise_error(self):
+        print(self.message)
+        exit()
+
+
+class PaperValueError(PaperError):
+    message = "Value error"
+    string = "PaperValueError"
+
+    def __init__(self):
+        super().__init__(PaperValueError.message, PaperValueError.string)
+
+
+class PaperTypeError(PaperError):
+    message = "Type error"
+    string = "PaperTypeError"
+
+    def __init__(self):
+        super().__init__(PaperValueError.message, PaperValueError.string)
+
+
+class PaperSyntaxError(PaperError):
+    message = "Syntax error"
+    string = "PaperSyntaxError"
+
+    def __init__(self):
+        super().__init__(PaperValueError.message, PaperValueError.string)
+
+
 class TokenType(OrderedEnum):
     NONE = 0
     PRINT = 1
@@ -76,6 +125,14 @@ class TokenType(OrderedEnum):
     STRING_DATA = 6
     INT_DATA = 7
     VAR_NAME = 8
+    FLOAT = 9
+    BOOL = 10
+    FALSE = 11
+    TRUE = 12
+    FUNC = 13
+    RETURN = 14
+    BREAK = 15
+    STOP = 16
 
 
 class RunType(OrderedEnum):
@@ -140,6 +197,30 @@ class Tokenizer:
 
         elif item == "int":
             token = Token(TokenType.INT)
+
+        elif item == "float":
+            token = Token(TokenType.FLOAT)
+
+        elif item == "bool":
+            token = Token(TokenType.BOOL)
+
+        elif item == "True":
+            token = Token(TokenType.TRUE)
+
+        elif item == "False":
+            token = Token(TokenType.FALSE)
+
+        elif item == "func":
+            token = Token(TokenType.FUNC)
+
+        elif item == "return":
+            token = Token(TokenType.RETURN)
+
+        elif item == "break":
+            token = Token(TokenType.BREAK)
+
+        elif item == "stop":
+            token = Token(TokenType.STOP)
 
         elif item == "=":
             token = Token(TokenType.EQUAL)
@@ -254,18 +335,48 @@ class Parser:
                     var = self.vars_in_mem[self.remove_dot(self.access_item(3))].data
                     self.vars_in_mem[name] = Int(var)
 
+    def parse_float(self):
+        print(FutureImplementation(0.2))
+
+    def parse_bool(self):
+        print(FutureImplementation(0.2))
+
+    def parse_func(self):
+        print(FutureImplementation())
+
+    def parse_stop(self):
+        exit()
+
     def parse_item(self):
+        token = self.tokens.get().token
+
         # Starts with print
-        if self.tokens.get().token == TokenType.PRINT:
+        if token == TokenType.PRINT:
             self.parse_print()
 
         # Starts with string
-        elif self.tokens.get().token == TokenType.STRING:
+        elif token == TokenType.STRING:
             self.parse_string()
 
         # Starts with int
-        elif self.tokens.get().token == TokenType.INT:
+        elif token == TokenType.INT:
             self.parse_int()
+
+        # Starts with float
+        elif token == TokenType.FLOAT:
+            self.parse_float()
+
+        # Starts with bool
+        elif token == TokenType.BOOL:
+            self.parse_bool()
+
+        # Starts with func
+        elif token == TokenType.FUNC:
+            self.parse_func()
+
+        # Starts with stop
+        elif token == TokenType.STOP:
+            self.parse_stop()
 
         self.tokens.index += 1
 
@@ -276,7 +387,6 @@ class Parser:
         pprint(self.vars_in_mem)
 
     def parse(self):
-        print(self)
         index = 0
         while index < len(self.tokens.tokens):
 
@@ -307,9 +417,7 @@ def option_parse():
     )
     options, args = parser.parse_args()
     filename = args[0]
-
     mode = RunType(int(options.mode)) if options.mode else RunType.NORMAL
-
     return filename, mode
 
 
