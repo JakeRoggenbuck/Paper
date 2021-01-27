@@ -45,6 +45,16 @@ class TokenType(OrderedEnum):
     LEFT_SQUIGGLY_BRACKET = 30
     RIGHT_SQUARE_BRACKET = 31
     LEFT_SQUARE_BRACKET = 32
+    PLUS = 33
+    MINUS = 34
+    MULTIPLY = 35
+    DEVIDE = 36
+    PLUSPLUS = 37
+    MINUSMINUS = 38
+    GREATER_THAN = 39
+    LESS_THAN = 40
+    IS_EQUAL = 41
+    NOT_EQUAL = 42
 
 
 TYPES = [TokenType.INT, TokenType.FLOAT, TokenType.BOOL, TokenType.STRING]
@@ -177,6 +187,36 @@ class Tokenizer:
 
         elif item == "[":
             token = Token(TokenType.LEFT_SQUARE_BRACKET)
+
+        elif item == "+":
+            token = Token(TokenType.PLUS)
+
+        elif item == "-":
+            token = Token(TokenType.MINUS)
+
+        elif item == "*":
+            token = Token(TokenType.MULTIPLY)
+
+        elif item == "/":
+            token = Token(TokenType.DEVIDE)
+
+        elif item == "++":
+            token = Token(TokenType.PLUSPLUS)
+
+        elif item == "--":
+            token = Token(TokenType.MINUSMINUS)
+
+        elif item == ">":
+            token = Token(TokenType.GREATER_THAN)
+
+        elif item == "<":
+            token = Token(TokenType.LESS_THAN)
+
+        elif item == "==":
+            token = Token(TokenType.IS_EQUAL)
+
+        elif item == "!=":
+            token = Token(TokenType.NOT_EQUAL)
 
         elif item[0] == "\"" and item[-1] == item[0]:
             token = Token(TokenType.STRING_DATA)
