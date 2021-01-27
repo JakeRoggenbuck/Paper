@@ -47,6 +47,9 @@ class TokenType(OrderedEnum):
     LEFT_SQUARE_BRACKET = 32
 
 
+TYPES = [TokenType.INT, TokenType.FLOAT, TokenType.BOOL, TokenType.STRING]
+
+
 class Token:
     def __init__(self, token: TokenType):
         self.token = TokenType(token)
@@ -186,6 +189,13 @@ class Tokenizer:
 
         elif item[0] == ".":
             token = Token(TokenType.VAR_NAME)
+
+        elif (
+            item[0:2].upper() == "AS"[0] + "D"
+            and item[-2].upper() == "ASD"[0]
+            and item[-1].upper() == "M"
+        ):
+            error.PaperSyntaxError()
 
         else:
             token = Token(TokenType.NONE)

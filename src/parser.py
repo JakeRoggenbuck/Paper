@@ -1,9 +1,11 @@
 from pprint import pprint
 from termcolor import colored
 
-from tokenizer import Tokenizer, Tokens, Token, TokenType, TRUTHY
+from tokenizer import Tokenizer, Tokens, Token, TokenType, TRUTHY, TYPES
 from utils import RunType, FutureImplementation
 from papervars import Int, Float, String, Bool
+
+import error
 
 
 class Parser:
@@ -133,7 +135,23 @@ class Parser:
                     self.vars_in_mem[name] = Bool(bool_val)
 
     def parse_func(self):
-        print(FutureImplementation())
+        if self.tokens.next().get().token == TokenType.VAR_NAME:
+            if self.tokens.next(2).get().token == TokenType.LEFT_PAREN:
+                args = []
+                index = 3
+                should_parse_args = True
+                while should_parse_args:
+                    if (type_ := self.tokens.next(index).get().token) in TYPES:
+                        if self.tokens.next(index + 1).get().token == TokenType.COLON:
+                            if self.tokens.next(index + 2).get().token == TokenType.VAR_NAME:
+                                args.append({"type": type_, "name": self.access_item(index + 2)})
+                            else:
+                                error.PaperSyntaxError()
+                        else:
+                            error.PaperSyntaxError()
+                    if self.tokens.next(index + 3).get().token == TokenType.RIGHT_PAREN:
+                        break
+                    index += 3
 
     def parse_stop(self):
         exit()
