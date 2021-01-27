@@ -1,7 +1,7 @@
 from pprint import pprint
 from termcolor import colored
 
-from tokenizer import Tokenizer, Tokens, Token, TokenType
+from tokenizer import Tokenizer, Tokens, Token, TokenType, TRUTHY
 from utils import RunType, FutureImplementation
 from papervars import Int, Float, String, Bool
 
@@ -73,7 +73,7 @@ class Parser:
                 # Get value from input, set as int
                 elif self.tokens.next(3).get().token == TokenType.INPUT:
 
-                    # Is raw string
+                    # Is raw int
                     if self.tokens.next(4).get().token == TokenType.INT_DATA:
                         get_input = input(self.access_item(4))
                         self.vars_in_mem[name] = Int(get_input)
@@ -84,10 +84,53 @@ class Parser:
                     self.vars_in_mem[name] = Int(var)
 
     def parse_float(self):
-        print(FutureImplementation(0.2))
+        if self.tokens.next().get().token == TokenType.VAR_NAME:
+            name = self.remove_dot(self.access_item(1))
+            if self.tokens.next(2).get().token == TokenType.EQUAL:
+
+                # Set a raw float
+                if self.tokens.next(3).get().token == TokenType.FLOAT_DATA:
+                    self.vars_in_mem[name] = Float(self.access_item(3))
+
+                # Get value from input, set as float
+                elif self.tokens.next(3).get().token == TokenType.INPUT:
+
+                    # Is raw float
+                    if self.tokens.next(4).get().token == TokenType.STRING_DATA:
+                        get_input = input(self.access_item(4))
+                        self.vars_in_mem[name] = Float(get_input)
+
+                # Set int as another float (redefinition)
+                elif self.tokens.next(3).get().token == TokenType.VAR_NAME:
+                    var = self.vars_in_mem[self.remove_dot(self.access_item(3))].data
+                    self.vars_in_mem[name] = Float(var)
 
     def parse_bool(self):
-        print(FutureImplementation(0.2))
+        if self.tokens.next().get().token == TokenType.VAR_NAME:
+            name = self.remove_dot(self.access_item(1))
+            if self.tokens.next(2).get().token == TokenType.EQUAL:
+
+                # Set a raw bool
+                bool_val = self.tokens.next(3).get().token
+                if bool_val == TokenType.TRUE or bool_val == TokenType.FALSE:
+                    bool_data = True if self.access_item(3) in TRUTHY else False
+                    self.vars_in_mem[name] = Bool(bool_data)
+
+                # Get value from input, set as bool
+                elif self.tokens.next(3).get().token == TokenType.INPUT:
+
+                    # Is raw bool
+                    bool_val = self.tokens.next(4).get().token
+                    if self.tokens.next(4).get().token == TokenType.STRING_DATA:
+                        get_input = input(self.access_item(4))
+                        bool_data = True if get_input in TRUTHY else False
+                        self.vars_in_mem[name] = Bool(bool_data)
+
+                # Set int as another bool (redefinition)
+                elif self.tokens.next(3).get().token == TokenType.VAR_NAME:
+                    var = self.vars_in_mem[self.remove_dot(self.access_item(3))].data
+                    bool_data = True if var in TRUTHY else False
+                    self.vars_in_mem[name] = Bool(bool_val)
 
     def parse_func(self):
         print(FutureImplementation())

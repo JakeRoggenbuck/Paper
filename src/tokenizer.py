@@ -5,8 +5,10 @@ from utils import OrderedEnum
 import error
 
 
-NUMBER_INT = re.compile('\d*')
-NUMBER_FLOAT = re.compile('\d*\.\d*')
+NUMBER_INT = re.compile('^\d*$')
+NUMBER_FLOAT = re.compile('^\d*\.\d*$')
+
+TRUTHY = ["TRUE", "True", "T", "1"]
 
 
 class TokenType(OrderedEnum):
@@ -18,15 +20,31 @@ class TokenType(OrderedEnum):
     EQUAL = 5
     STRING_DATA = 6
     INT_DATA = 7
-    VAR_NAME = 8
-    FLOAT = 9
-    BOOL = 10
-    FALSE = 11
-    TRUE = 12
-    FUNC = 13
-    RETURN = 14
-    BREAK = 15
-    STOP = 16
+    FLOAT_DATA = 8
+    VAR_NAME = 9
+    FLOAT = 10
+    BOOL = 11
+    FALSE = 12
+    TRUE = 13
+    FUNC = 14
+    RETURN = 15
+    BREAK = 16
+    STOP = 17
+    TERN = 18
+    IF = 19
+    ELSIF = 20
+    ELSE = 21
+    WHILE = 22
+    UNTIL = 23
+    NOT = 24
+    RIGHT_PAREN = 25
+    LEFT_PAREN = 26
+    COLON = 27
+    SEMI_COLON = 28
+    RIGHT_SQUIGGLY_BRACKET = 29
+    LEFT_SQUIGGLY_BRACKET = 30
+    RIGHT_SQUARE_BRACKET = 31
+    LEFT_SQUARE_BRACKET = 32
 
 
 class Token:
@@ -112,11 +130,59 @@ class Tokenizer:
         elif item == "=":
             token = Token(TokenType.EQUAL)
 
+        elif item == "?":
+            token = Token(TokenType.TERN)
+
+        elif item == "if":
+            token = Token(TokenType.IF)
+
+        elif item == "elsif":
+            token = Token(TokenType.ELSIF)
+
+        elif item == "else":
+            token = Token(TokenType.ELSE)
+
+        elif item == "while":
+            token = Token(TokenType.WHILE)
+
+        elif item == "until":
+            token = Token(TokenType.UNTIL)
+
+        elif item == "not":
+            token = Token(TokenType.NOT)
+
+        elif item == ")":
+            token = Token(TokenType.RIGHT_PAREN)
+
+        elif item == "(":
+            token = Token(TokenType.LEFT_PAREN)
+
+        elif item == ":":
+            token = Token(TokenType.COLON)
+
+        elif item == ";":
+            token = Token(TokenType.SEMI_COLON)
+
+        elif item == "}":
+            token = Token(TokenType.RIGHT_SQUIGGLY_BRACKET)
+
+        elif item == "{":
+            token = Token(TokenType.LEFT_SQUIGGLY_BRACKET)
+
+        elif item == "]":
+            token = Token(TokenType.RIGHT_SQUARE_BRACKET)
+
+        elif item == "[":
+            token = Token(TokenType.LEFT_SQUARE_BRACKET)
+
         elif item[0] == "\"" and item[-1] == item[0]:
             token = Token(TokenType.STRING_DATA)
 
-        elif NUMBER_INT.match(item).group(0) != "":
+        elif NUMBER_INT.match(item):
             token = Token(TokenType.INT_DATA)
+
+        elif NUMBER_FLOAT.match(item):
+            token = Token(TokenType.FLOAT_DATA)
 
         elif item[0] == ".":
             token = Token(TokenType.VAR_NAME)

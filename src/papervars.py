@@ -1,3 +1,6 @@
+import error
+
+
 class Var:
     def __init__(self, data, name):
         self.data = data
@@ -17,14 +20,23 @@ class String(Var):
 
 class Int(Var):
     def __init__(self, data):
-        super().__init__(int(data), "Int")
+        try:
+            super().__init__(int(data), "Int")
+        except:
+            error.PaperTypeError()
 
 
 class Float(Var):
     def __init__(self, data):
-        super().__init__(float(data), "Float")
+        try:
+            super().__init__(float(data), "Float")
+        except:
+            error.PaperTypeError()
 
 
 class Bool(Var):
     def __init__(self, data):
-        super().__init__(float(data), "Bool")
+        try:
+            super().__init__(bool(data), "Bool")
+        except:
+            error.PaperTypeError()
