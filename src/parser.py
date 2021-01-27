@@ -153,6 +153,9 @@ class Parser:
                         break
                     index += 3
 
+    def call_function_parse(self):
+        FutureImplementation(0.3)
+
     def parse_stop(self):
         exit()
 
@@ -186,6 +189,10 @@ class Parser:
         # Starts with stop
         elif token == TokenType.STOP:
             self.parse_stop()
+
+        # Function call
+        elif token == TokenType.VAR_NAME:
+            self.call_function_parse()
 
         self.tokens.index += 1
 

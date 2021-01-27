@@ -2,7 +2,7 @@ from enum import Enum
 from termcolor import colored
 
 
-VERSION = 0.1
+VERSION = 0.2
 
 
 class FutureImplementation:
